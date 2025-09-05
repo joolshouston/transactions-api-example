@@ -40,8 +40,8 @@ func main() {
 	ctx := context.Background()
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {
-		logger.WarnContext(ctx, "MONGODB_URI not set, defaulting to mongodb://root:example@mongodb:27017/?authSource=admin")
-		mongoURI = "mongodb://root:example@mongodb:27017/?authSource=admin"
+		logger.WarnContext(ctx, "MONGODB_URI not set, defaulting to mongodb://root:password@localhost:27017/?authSource=admin")
+		mongoURI = "mongodb://root:password@localhost:27017/?authSource=admin"
 	}
 	mongoClient, err := setupMongoDB(ctx, mongoURI)
 	if err != nil {

@@ -19,16 +19,11 @@ func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
 	}
 }
 
-func WriteError(w http.ResponseWriter, status int, errMsg string) {
+func WriteError(w http.ResponseWriter, error *model.ErrorResponse) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
+	w.WriteHeader(error.Status)
 
-	errResp := model.ErrorResponse{
-		Message: errMsg,
-		Status:  status,
-	}
-
-	if err := json.NewEncoder(w).Encode(errResp); err != nil {
+	if err := json.NewEncoder(w).Encode(error); err != nil {
 		http.Error(w, `{"error":"failed to encode error response"}`, http.StatusInternalServerError)
 	}
 }

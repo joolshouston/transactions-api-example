@@ -40,6 +40,7 @@ definitions:
       are required to create a transaction
     properties:
       account_id:
+        description: 'required: true'
         type: string
       amount:
         type: number
@@ -57,7 +58,6 @@ definitions:
       operation_type_id:
         $ref: '#/definitions/model.OperationType'
       transaction_id:
-        description: 'required: true'
         type: string
     type: object
 externalDocs:

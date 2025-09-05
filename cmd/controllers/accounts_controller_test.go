@@ -190,7 +190,7 @@ func Test_GetAccount(t *testing.T) {
 		{
 			name:           "error getting account",
 			accountID:      "invalid_id",
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusInternalServerError,
 			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
 				if resp.StatusCode != expectedStatus {
 					t.Fatalf("expected status %d, got %d", expectedStatus, resp.StatusCode)
@@ -199,13 +199,13 @@ func Test_GetAccount(t *testing.T) {
 				if err := json.NewDecoder(resp.Body).Decode(&errResp); err != nil {
 					t.Fatalf("failed to decode response body: %v", err)
 				}
-				if errResp.Message != "error getting account" {
-					t.Errorf("expected error message 'error getting account', got %s", errResp.Message)
+				if errResp.Message != "failed to get account" {
+					t.Errorf("expected error message 'failed to get account', got %s", errResp.Message)
 				}
 			},
 		},
 		{
-			name: "missing account id in path",
+			name:           "missing account id in path",
 			accountID:      "",
 			expectedStatus: http.StatusBadRequest,
 			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {

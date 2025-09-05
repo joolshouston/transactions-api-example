@@ -55,7 +55,7 @@ func Test_CreateTransaction(t *testing.T) {
 		name           string
 		transaction    model.TransactionRequestBody
 		idempotencyKey string
-		validate       func(t *testing.T, resp *model.TransactionResponseBody, err error)
+		validate       func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse)
 	}{
 		{
 			name: "Successful transaction creation",
@@ -65,7 +65,7 @@ func Test_CreateTransaction(t *testing.T) {
 				Amount:      -100.0,
 			},
 			idempotencyKey: "x-idempotency-key-1",
-			validate: func(t *testing.T, resp *model.TransactionResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse) {
 				if err != nil {
 					t.Fatalf("expected no error, got %v", err)
 				}
@@ -82,7 +82,7 @@ func Test_CreateTransaction(t *testing.T) {
 				Amount:      -123.5,
 			},
 			idempotencyKey: "x-idempotency-key-duplicate",
-			validate: func(t *testing.T, resp *model.TransactionResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse) {
 				if err != nil {
 					t.Fatalf("expected no error, got %v", err)
 				}
@@ -108,7 +108,7 @@ func Test_CreateTransaction(t *testing.T) {
 				Amount:      -100.0,
 			},
 			idempotencyKey: "x-idempotency-key-fail",
-			validate: func(t *testing.T, resp *model.TransactionResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}
@@ -122,7 +122,7 @@ func Test_CreateTransaction(t *testing.T) {
 				Amount:      100.0,
 			},
 			idempotencyKey: "x-idempotency-key-1",
-			validate: func(t *testing.T, resp *model.TransactionResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}
@@ -136,12 +136,12 @@ func Test_CreateTransaction(t *testing.T) {
 				Amount:      -100.0,
 			},
 			idempotencyKey: "x-idempotency-key-1",
-			validate: func(t *testing.T, resp *model.TransactionResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}
-				if err.Error() != "account not found" {
-					t.Fatalf("expected error 'account not found', got %v", err)
+				if err.Message != "account not found" {
+					t.Fatalf("expected error 'account not found', got %v", err.Message)
 				}
 			},
 		},
@@ -153,12 +153,12 @@ func Test_CreateTransaction(t *testing.T) {
 				Amount:      -100.0,
 			},
 			idempotencyKey: "x-idempotency-key-1",
-			validate: func(t *testing.T, resp *model.TransactionResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}
-				if err.Error() != "account query failed" {
-					t.Fatalf("expected error 'account query failed', got %v", err)
+				if err.Message != "failed to get account" {
+					t.Fatalf("expected error 'failed to get account', got %v", err.Message)
 				}
 			},
 		},
@@ -170,12 +170,12 @@ func Test_CreateTransaction(t *testing.T) {
 				Amount:      100.0,
 			},
 			idempotencyKey: "x-idempotency-key-1",
-			validate: func(t *testing.T, resp *model.TransactionResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}
-				if err.Error() != "invalid operation type for payment amount" {
-					t.Fatalf("expected error 'invalid operation type for payment amount', got %v", err)
+				if err.Message != "invalid operation type for transaction amount" {
+					t.Fatalf("expected error 'invalid operation type for transaction amount', got %v", err.Message)
 				}
 			},
 		},
@@ -187,12 +187,12 @@ func Test_CreateTransaction(t *testing.T) {
 				Amount:      100.0,
 			},
 			idempotencyKey: "x-idempotency-key-1",
-			validate: func(t *testing.T, resp *model.TransactionResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}
-				if err.Error() != "invalid operation type for payment amount" {
-					t.Fatalf("expected error 'invalid operation type for payment amount', got %v", err)
+				if err.Message != "invalid operation type for transaction amount" {
+					t.Fatalf("expected error 'invalid operation type for transaction amount', got %v", err.Message)
 				}
 			},
 		},
@@ -204,12 +204,12 @@ func Test_CreateTransaction(t *testing.T) {
 				Amount:      100.0,
 			},
 			idempotencyKey: "x-idempotency-key-1",
-			validate: func(t *testing.T, resp *model.TransactionResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}
-				if err.Error() != "invalid operation type for payment amount" {
-					t.Fatalf("expected error 'invalid operation type for payment amount', got %v", err)
+				if err.Message != "invalid operation type for transaction amount" {
+					t.Fatalf("expected error 'invalid operation type for transaction amount', got %v", err.Message)
 				}
 			},
 		},
@@ -221,12 +221,12 @@ func Test_CreateTransaction(t *testing.T) {
 				Amount:      -100.0,
 			},
 			idempotencyKey: "x-idempotency-key-1",
-			validate: func(t *testing.T, resp *model.TransactionResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}
-				if err.Error() != "invalid operation type for payment amount" {
-					t.Fatalf("expected error 'invalid operation type for payment amount', got %v", err)
+				if err.Message != "invalid operation type for transaction amount" {
+					t.Fatalf("expected error 'invalid operation type for transaction amount', got %v", err.Message)
 				}
 			},
 		},
@@ -238,14 +238,14 @@ func Test_CreateTransaction(t *testing.T) {
 				Amount:      -99999.0,
 			},
 			idempotencyKey: "x-idempotency-key-1",
-			validate: func(t *testing.T, resp *model.TransactionResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.TransactionResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}
-				if err.Error() != "transaction creation failed" {
-					t.Fatalf("expected error 'transaction creation failed', got %v", err)
+				if err.Message != "failed to create transaction" {
+					t.Fatalf("expected error 'failed to create transaction', got %v", err.Message)
 				}
-			},	
+			},
 		},
 	}
 

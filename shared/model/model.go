@@ -43,7 +43,6 @@ type TransactionRequestBody struct {
 //	@Description	Transaction response body
 //	@Description	Transaction ID, Account ID, Operation type ID and Amount of the created transaction
 type TransactionResponseBody struct {
-
 	TransactionID string        `json:"transaction_id"`
 	AccountID     string        `json:"account_id"`
 	OperationID   OperationType `json:"operation_type_id"`

@@ -259,6 +259,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "account_id": {
+                    "description": "required: true",
                     "type": "string"
                 },
                 "amount": {
@@ -283,7 +284,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/model.OperationType"
                 },
                 "transaction_id": {
-                    "description": "required: true",
                     "type": "string"
                 }
             }

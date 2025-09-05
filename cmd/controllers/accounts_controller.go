@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -39,17 +38,23 @@ func NewAccountsController(service *services.AccountsService, logger *slog.Logge
 func (c *AccountsController) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	var account model.AccountRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&account); err != nil {
-		json_handler.WriteError(w, http.StatusBadRequest, "invalid request body")
+		json_handler.WriteError(w, &model.ErrorResponse{
+			Status:  http.StatusBadRequest,
+			Message: "invalid request body",
+		})
 		return
 	}
 	if account.DocumentNumber == "" {
-		json_handler.WriteError(w, http.StatusBadRequest, "document_number is required")
+		json_handler.WriteError(w, &model.ErrorResponse{
+			Status:  http.StatusBadRequest,
+			Message: "document_number is required",
+		})
 		return
 	}
 
 	accountResponse, err := c.service.CreateAccount(r.Context(), account.DocumentNumber)
 	if err != nil {
-		json_handler.WriteError(w, http.StatusInternalServerError, "failed to create account")
+		json_handler.WriteError(w, err)
 		return
 	}
 
@@ -71,17 +76,19 @@ func (c *AccountsController) CreateAccount(w http.ResponseWriter, r *http.Reques
 //	@Produce		json
 //	@Router			/accounts/{id} [get]
 func (c *AccountsController) GetAccount(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Path)
 	id := chi.URLParam(r, "id")
 	id = strings.TrimSpace(id)
 	if id == "" {
-		json_handler.WriteError(w, http.StatusBadRequest, "account ID is required")
+		json_handler.WriteError(w, &model.ErrorResponse{
+			Status:  http.StatusBadRequest,
+			Message: "account ID is required",
+		})
 		return
 	}
 
 	account, err := c.service.GetAccountByID(r.Context(), id)
 	if err != nil {
-		json_handler.WriteError(w, http.StatusBadRequest, "error getting account")
+		json_handler.WriteError(w, err)
 		return
 	}
 	json_handler.WriteJSON(w, http.StatusOK, account)

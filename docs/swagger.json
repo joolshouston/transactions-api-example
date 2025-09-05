@@ -253,6 +253,7 @@
             "type": "object",
             "properties": {
                 "account_id": {
+                    "description": "required: true",
                     "type": "string"
                 },
                 "amount": {
@@ -277,7 +278,6 @@
                     "$ref": "#/definitions/model.OperationType"
                 },
                 "transaction_id": {
-                    "description": "required: true",
                     "type": "string"
                 }
             }

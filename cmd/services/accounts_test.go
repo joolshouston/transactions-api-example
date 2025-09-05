@@ -67,14 +67,14 @@ func Test_CreateAccount(t *testing.T) {
 	tests := []struct {
 		name        string
 		requestBody model.AccountRequestBody
-		validate    func(t *testing.T, resp *model.AccountResponseBody, err error)
+		validate    func(t *testing.T, resp *model.AccountResponseBody, err *model.ErrorResponse)
 	}{
 		{
 			name: "Valid account",
 			requestBody: model.AccountRequestBody{
 				DocumentNumber: "123456789",
 			},
-			validate: func(t *testing.T, resp *model.AccountResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.AccountResponseBody, err *model.ErrorResponse) {
 				if err != nil {
 					t.Fatalf("expected no error, got %v", err)
 				}
@@ -88,7 +88,7 @@ func Test_CreateAccount(t *testing.T) {
 			requestBody: model.AccountRequestBody{
 				DocumentNumber: "",
 			},
-			validate: func(t *testing.T, resp *model.AccountResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.AccountResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}
@@ -99,7 +99,7 @@ func Test_CreateAccount(t *testing.T) {
 			requestBody: model.AccountRequestBody{
 				DocumentNumber: "1234567895",
 			},
-			validate: func(t *testing.T, resp *model.AccountResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.AccountResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error for duplicate account, got nil")
 				}
@@ -110,7 +110,7 @@ func Test_CreateAccount(t *testing.T) {
 			requestBody: model.AccountRequestBody{
 				DocumentNumber: "failed_to_get_account",
 			},
-			validate: func(t *testing.T, resp *model.AccountResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.AccountResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error for failed to get account, got nil")
 				}
@@ -126,7 +126,6 @@ func Test_CreateAccount(t *testing.T) {
 	}
 }
 
-
 func Test_GetAccountByID(t *testing.T) {
 	repo := &MockMongoRepo{}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -134,12 +133,12 @@ func Test_GetAccountByID(t *testing.T) {
 	tests := []struct {
 		name      string
 		accountID string
-		validate  func(t *testing.T, resp *model.AccountResponseBody, err error)
+		validate  func(t *testing.T, resp *model.AccountResponseBody, err *model.ErrorResponse)
 	}{
 		{
 			name:      "Valid account ID",
 			accountID: "valid_id",
-			validate: func(t *testing.T, resp *model.AccountResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.AccountResponseBody, err *model.ErrorResponse) {
 				if err != nil {
 					t.Fatalf("expected no error, got %v", err)
 				}
@@ -151,7 +150,7 @@ func Test_GetAccountByID(t *testing.T) {
 		{
 			name:      "Invalid account ID",
 			accountID: "invalid_id",
-			validate: func(t *testing.T, resp *model.AccountResponseBody, err error) {
+			validate: func(t *testing.T, resp *model.AccountResponseBody, err *model.ErrorResponse) {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}

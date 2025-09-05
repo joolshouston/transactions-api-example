@@ -5,8 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -25,6 +23,7 @@ func (m *MockMongoRepo) CreateTransaction(ctx context.Context, transaction model
 			ID:          bson.NewObjectID(),
 			AccountID:   transaction.AccountID,
 			OperationID: transaction.OperationID,
+			Amount:      transaction.Amount,
 		}, nil
 	case -99999.0:
 		return nil, errors.New("transaction creation failed")
@@ -68,16 +67,13 @@ func Test_CreateTransaction(t *testing.T) {
 	}{
 		{
 			name:           "Successful transaction creation",
-			transaction:    `{"account_id":"valid_id","operation_id":1,"amount":-123.5}`,
+			transaction:    `{"account_id":"valid_id","operation_type_id":1,"amount":-123.5}`,
 			idempotencyKey: "x-idempotency-key-unique",
 			expectedStatus: http.StatusCreated,
 			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
 				if resp.StatusCode != expectedStatus {
 					t.Errorf("expected status %d, got %d", expectedStatus, resp.StatusCode)
 				}
-				// print response body for debugging
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				fmt.Println(string(bodyBytes))
 				var respBody model.TransactionResponseBody
 				err := json.NewDecoder(resp.Body).Decode(&respBody)
 
@@ -88,13 +84,19 @@ func Test_CreateTransaction(t *testing.T) {
 				if respBody.AccountID != "valid_id" {
 					t.Errorf("expected account ID 'valid_id', got %s", respBody.AccountID)
 				}
+				if respBody.OperationID != 1 {
+					t.Errorf("expected operation ID 1, got %d", respBody.OperationID)
+				}
+				if respBody.Amount != -123.5 {
+					t.Errorf("expected amount -123.5, got %f", respBody.Amount)
+				}
 			},
 		},
 		{
-			name:           "Duplicate idempotency key",
-			transaction:    `{"account_id":"valid_id","operation_id":1,"amount":-123.5}`,
+			name:           "Duplicate idempotency key used again, should return existing transaction",
+			transaction:    `{"account_id":"valid_id","operation_type_id":1,"amount":-123.5}`,
 			idempotencyKey: "x-idempotency-key-duplicate",
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusCreated,
 			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
 				if resp.StatusCode != expectedStatus {
 					t.Errorf("expected status %d, got %d", expectedStatus, resp.StatusCode)
@@ -107,12 +109,18 @@ func Test_CreateTransaction(t *testing.T) {
 				if respBody.AccountID != "valid_id" {
 					t.Errorf("expected account ID 'valid_id', got %s", respBody.AccountID)
 				}
+				if respBody.OperationID != 1 {
+					t.Errorf("expected operation ID 1, got %d", respBody.OperationID)
+				}
+				if respBody.Amount != -123.5 {
+					t.Errorf("expected amount -123.5, got %f", respBody.Amount)
+				}
 			},
 		},
 		{
 			name:           "Invalid operation type",
-			transaction:    `{"account_id":"valid_id","operation_id":99,"amount":-123.5}`,
-			idempotencyKey: "x-idempotency-key-invalid-op",
+			transaction:    `{"account_id":"valid_id","operation_type_id":99,"amount":-123.5}`,
+			idempotencyKey: "x-idempotency-key-unique",
 			expectedStatus: http.StatusBadRequest,
 			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
 				if resp.StatusCode != expectedStatus {
@@ -124,13 +132,13 @@ func Test_CreateTransaction(t *testing.T) {
 					t.Fatalf("expected no error decoding response, got %v", err)
 				}
 				if errResp.Message != "invalid operation type" {
-					t.Errorf("expected error message 'invalid operation type', got %s", errResp.Message)
+					t.Errorf("expected error message 'failed to create transaction: invalid operation type', got %s", errResp.Message)
 				}
 			},
 		},
 		{
 			name:           "Idempotency key missing",
-			transaction:    `{"account_id":"valid_id","operation_id":1,"amount":-123.5}`,
+			transaction:    `{"account_id":"valid_id","operation_type_id":1,"amount":-123.5}`,
 			idempotencyKey: "",
 			expectedStatus: http.StatusBadRequest,
 			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
@@ -142,8 +150,27 @@ func Test_CreateTransaction(t *testing.T) {
 				if err != nil {
 					t.Fatalf("expected no error decoding response, got %v", err)
 				}
-				if errResp.Message != "idempotency key is required" {
-					t.Errorf("expected error message 'idempotency key is required', got %s", errResp.Message)
+				if errResp.Message != "X-idempotency-Key header is required" {
+					t.Errorf("expected error message 'X-idempotency-Key header is required', got %s", errResp.Message)
+				}
+			},
+		},
+		{
+			name:           "Invalid request body",
+			transaction:    `{"account_id":"valn_type_id":1,"amount":-123.5}`,
+			idempotencyKey: "x-idempotency-key-unique",
+			expectedStatus: http.StatusBadRequest,
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
+				if resp.StatusCode != expectedStatus {
+					t.Errorf("expected status %d, got %d", expectedStatus, resp.StatusCode)
+				}
+				var errResp model.ErrorResponse
+				err := json.NewDecoder(resp.Body).Decode(&errResp)
+				if err != nil {
+					t.Fatalf("expected no error decoding response, got %v", err)
+				}
+				if errResp.Message != "invalid request body" {
+					t.Errorf("expected error message 'invalid request body', got %s", errResp.Message)
 				}
 			},
 		},

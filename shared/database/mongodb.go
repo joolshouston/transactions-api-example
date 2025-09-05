@@ -32,8 +32,12 @@ func (m *MongoDB) CreateAccount(ctx context.Context, documentID string) (*model.
 }
 
 func (m *MongoDB) GetAccountByID(ctx context.Context, accountID string) (*model.Account, error) {
+	objectID, err := bson.ObjectIDFromHex(accountID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid account ID format: %w", err)
+	}
 	var acc model.Account
-	err := m.client.Database("pismo").Collection("accounts").FindOne(ctx, bson.M{"_id": accountID}).Decode(&acc)
+	err = m.client.Database("pismo").Collection("accounts").FindOne(ctx, bson.M{"_id": objectID}).Decode(&acc)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, err
 	}
