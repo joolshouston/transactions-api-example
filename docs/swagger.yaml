@@ -1,0 +1,198 @@
+basePath: /v1
+definitions:
+  model.AccountRequestBody:
+    description: Account request body Document number used to create an account
+    properties:
+      document_number:
+        description: Document number
+        type: string
+    type: object
+  model.AccountResponseBody:
+    description: Account response body ID and Document number of the created account
+    properties:
+      account_id:
+        type: string
+      document_number:
+        type: string
+    type: object
+  model.ErrorResponse:
+    description: Error response body Message and Status code of the error
+    properties:
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  model.OperationType:
+    enum:
+    - 1
+    - 2
+    - 3
+    - 4
+    type: integer
+    x-enum-varnames:
+    - PURCHASE
+    - INSTALLMENT_PURCHASE
+    - WITHDRAWAL
+    - PAYMENT
+  model.TransactionRequestBody:
+    description: Transaction request body Account ID, Operation type ID and Amount
+      are required to create a transaction
+    properties:
+      account_id:
+        description: 'required: true'
+        type: string
+      amount:
+        type: number
+      operation_type_id:
+        $ref: '#/definitions/model.OperationType'
+    type: object
+  model.TransactionResponseBody:
+    description: Transaction response body Transaction ID, Account ID, Operation type
+      ID and Amount of the created transaction
+    properties:
+      account_id:
+        type: string
+      amount:
+        type: number
+      operation_type_id:
+        $ref: '#/definitions/model.OperationType'
+      transaction_id:
+        type: string
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server for a financial transactions API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Pismo Technical Test API
+  version: "1.0"
+paths:
+  /accounts:
+    post:
+      consumes:
+      - application/json
+      description: create account with document number
+      parameters:
+      - description: Account info
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/model.AccountRequestBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.AccountResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Create an account
+      tags:
+      - accounts
+  /accounts/{id}:
+    get:
+      consumes:
+      - application/json
+      description: get account by ID
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.AccountResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get a specific account by ID
+      tags:
+      - accounts
+  /transactions:
+    post:
+      consumes:
+      - application/json
+      description: create a transaction
+      parameters:
+      - description: Transaction request body
+        in: body
+        name: transaction
+        required: true
+        schema:
+          $ref: '#/definitions/model.TransactionRequestBody'
+      - description: Idempotency Key
+        in: header
+        name: X-idempotency-Key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.TransactionResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Post a transaction
+      tags:
+      - transactions
+swagger: "2.0"
