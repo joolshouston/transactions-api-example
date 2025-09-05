@@ -1,4 +1,4 @@
-basePath: /api/v1
+basePath: /v1
 definitions:
   model.AccountRequestBody:
     description: Account request body Document number used to create an account
@@ -129,8 +129,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/model.AccountResponseBody'
         "400":

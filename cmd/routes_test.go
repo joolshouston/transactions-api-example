@@ -99,7 +99,7 @@ func TestRoutes(t *testing.T) {
 		body           string
 		headers        map[string]string
 		expectedStatus int
-		validate       func(t *testing.T, resp *http.Response)
+		validate       func(t *testing.T, resp *http.Response, expectedStatus int)
 	}{
 		{
 			name:           "POST /v1/accounts - successful account creation",
@@ -108,7 +108,7 @@ func TestRoutes(t *testing.T) {
 			body:           `{"document_number":"123456789"}`,
 			headers:        map[string]string{"Content-Type": "application/json"},
 			expectedStatus: http.StatusCreated,
-			validate: func(t *testing.T, resp *http.Response) {
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
 				var account model.AccountResponseBody
 				err := json.NewDecoder(resp.Body).Decode(&account)
 				if err != nil {
@@ -126,7 +126,7 @@ func TestRoutes(t *testing.T) {
 			body:           `{"invalid": "data"}`,
 			headers:        map[string]string{"Content-Type": "application/json"},
 			expectedStatus: http.StatusBadRequest,
-			validate: func(t *testing.T, resp *http.Response) {
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
 				var errResp model.ErrorResponse
 				err := json.NewDecoder(resp.Body).Decode(&errResp)
 				if err != nil {
@@ -144,7 +144,7 @@ func TestRoutes(t *testing.T) {
 			body:           "",
 			headers:        map[string]string{},
 			expectedStatus: http.StatusOK,
-			validate: func(t *testing.T, resp *http.Response) {
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
 				var account model.AccountResponseBody
 				err := json.NewDecoder(resp.Body).Decode(&account)
 				if err != nil {
@@ -162,7 +162,7 @@ func TestRoutes(t *testing.T) {
 			body:           "",
 			headers:        map[string]string{},
 			expectedStatus: http.StatusNotFound,
-			validate: func(t *testing.T, resp *http.Response) {
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
 				var errResp model.ErrorResponse
 				err := json.NewDecoder(resp.Body).Decode(&errResp)
 				if err != nil {
@@ -183,7 +183,7 @@ func TestRoutes(t *testing.T) {
 				"X-idempotency-Key": "unique-key-123",
 			},
 			expectedStatus: http.StatusCreated,
-			validate: func(t *testing.T, resp *http.Response) {
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
 				var transaction model.TransactionResponseBody
 				err := json.NewDecoder(resp.Body).Decode(&transaction)
 				if err != nil {
@@ -204,7 +204,10 @@ func TestRoutes(t *testing.T) {
 			body:           `{"account_id":"valid_id","operation_type_id":1,"amount":-123.5}`,
 			headers:        map[string]string{"Content-Type": "application/json"},
 			expectedStatus: http.StatusBadRequest,
-			validate: func(t *testing.T, resp *http.Response) {
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
+				if resp.StatusCode != expectedStatus {
+					t.Errorf("expected status %d, got %d", expectedStatus, resp.StatusCode)
+				}
 				var errResp model.ErrorResponse
 				err := json.NewDecoder(resp.Body).Decode(&errResp)
 				if err != nil {
@@ -222,7 +225,10 @@ func TestRoutes(t *testing.T) {
 			body:           `{"invalid": "data"}`,
 			headers:        map[string]string{"Content-Type": "application/json", "X-idempotency-Key": "test-key"},
 			expectedStatus: http.StatusBadRequest,
-			validate: func(t *testing.T, resp *http.Response) {
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
+				if resp.StatusCode != expectedStatus {
+					t.Errorf("expected status %d, got %d", expectedStatus, resp.StatusCode)
+				}
 				var errResp model.ErrorResponse
 				err := json.NewDecoder(resp.Body).Decode(&errResp)
 				if err != nil {
@@ -240,8 +246,10 @@ func TestRoutes(t *testing.T) {
 			body:           `{}`,
 			headers:        map[string]string{"Content-Type": "application/json"},
 			expectedStatus: http.StatusNotFound,
-			validate: func(t *testing.T, resp *http.Response) {
-				// Chi returns 404 for unmatched routes
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
+				if resp.StatusCode != expectedStatus {
+					t.Errorf("expected status %d, got %d", expectedStatus, resp.StatusCode)
+				}
 			},
 		},
 		{
@@ -251,8 +259,10 @@ func TestRoutes(t *testing.T) {
 			body:           "",
 			headers:        map[string]string{},
 			expectedStatus: http.StatusNotFound,
-			validate: func(t *testing.T, resp *http.Response) {
-				// Chi returns 404 for unmatched endpoints
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
+				if resp.StatusCode != expectedStatus {
+					t.Errorf("expected status %d, got %d", expectedStatus, resp.StatusCode)
+				}
 			},
 		},
 	}
@@ -265,8 +275,6 @@ func TestRoutes(t *testing.T) {
 			} else {
 				req = httptest.NewRequest(tt.method, tt.url, nil)
 			}
-
-			// Set headers
 			for key, value := range tt.headers {
 				req.Header.Set(key, value)
 			}
@@ -275,11 +283,8 @@ func TestRoutes(t *testing.T) {
 			router.ServeHTTP(resp, req)
 
 			result := resp.Result()
-			if result.StatusCode != tt.expectedStatus {
-				t.Errorf("expected status %d, got %d", tt.expectedStatus, result.StatusCode)
-			}
 
-			tt.validate(t, result)
+			tt.validate(t, result, tt.expectedStatus)
 		})
 	}
 }
@@ -301,7 +306,7 @@ func TestRoutesMiddleware(t *testing.T) {
 		url            string
 		body           string
 		expectedStatus int
-		validate       func(t *testing.T, resp *http.Response)
+		validate       func(t *testing.T, resp *http.Response, expectedStatus int)
 	}{
 		{
 			name:           "Test timeout middleware is applied",
@@ -309,8 +314,10 @@ func TestRoutesMiddleware(t *testing.T) {
 			url:            "/v1/accounts",
 			body:           `{"document_number":"123456789"}`,
 			expectedStatus: http.StatusCreated,
-			validate: func(t *testing.T, resp *http.Response) {
-				// Test that the request completes successfully within timeout
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
+				if resp.StatusCode != expectedStatus {
+					t.Errorf("expected status %d, got %d", expectedStatus, resp.StatusCode)
+				}
 				var account model.AccountResponseBody
 				err := json.NewDecoder(resp.Body).Decode(&account)
 				if err != nil {
@@ -321,11 +328,13 @@ func TestRoutesMiddleware(t *testing.T) {
 		{
 			name:           "Test recoverer middleware handles panics",
 			method:         "GET",
-			url:            "/v1/accounts/trigger-panic", // This would trigger panic in real controller
+			url:            "/v1/accounts/trigger-panic",
 			body:           "",
-			expectedStatus: http.StatusNotFound, // Since this route doesn't exist, it returns 404
-			validate: func(t *testing.T, resp *http.Response) {
-				// The test validates that the server doesn't crash
+			expectedStatus: http.StatusNotFound,
+			validate: func(t *testing.T, resp *http.Response, expectedStatus int) {
+				if resp.StatusCode != expectedStatus {
+					t.Errorf("expected status %d, got %d", expectedStatus, resp.StatusCode)
+				}
 			},
 		},
 	}
@@ -344,11 +353,8 @@ func TestRoutesMiddleware(t *testing.T) {
 			router.ServeHTTP(resp, req)
 
 			result := resp.Result()
-			if result.StatusCode != tt.expectedStatus {
-				t.Errorf("expected status %d, got %d", tt.expectedStatus, result.StatusCode)
-			}
 
-			tt.validate(t, result)
+			tt.validate(t, result, tt.expectedStatus)
 		})
 	}
 }

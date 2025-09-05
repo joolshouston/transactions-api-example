@@ -16,7 +16,7 @@
         "version": "1.0"
     },
     "host": "localhost:8080",
-    "basePath": "/api/v1",
+    "basePath": "/v1",
     "paths": {
         "/accounts": {
             "post": {
@@ -99,8 +99,8 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/model.AccountResponseBody"
                         }

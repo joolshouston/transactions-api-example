@@ -67,7 +67,7 @@ func (c *AccountsController) CreateAccount(w http.ResponseWriter, r *http.Reques
 //	@Description	get account by ID
 //	@Tags			accounts
 //	@Param			id	path		string	true	"Account ID"
-//	@Success		201	{object}	model.AccountResponseBody
+//	@Success		200	{object}	model.AccountResponseBody
 //	@Failure		400	{object}	model.ErrorResponse
 //	@Failure		500	{object}	model.ErrorResponse
 //	@Failure		409	{object}	model.ErrorResponse

@@ -105,8 +105,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/model.AccountResponseBody"
                         }
@@ -299,7 +299,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-	BasePath:         "/api/v1",
+	BasePath:         "/v1",
 	Schemes:          []string{},
 	Title:            "Pismo Technical Test API",
 	Description:      "This is a sample server for a financial transactions API.",
