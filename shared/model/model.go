@@ -55,6 +55,7 @@ type Transaction struct {
 	OperationID    OperationType `bson:"operation_type_id"`
 	Amount         float64       `bson:"amount"`
 	EventDate      string        `bson:"event_date"`
+	Balance        float64       `bson:"balance"`
 	IdempotencyKey string        `bson:"idempotency_key"` // Idempotency Key this is to ensure idempotency of transactions, e.g., if the same request is sent multiple times, it will only be processed once
 }
 

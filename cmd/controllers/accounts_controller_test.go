@@ -19,6 +19,16 @@ import (
 
 type MockMongoRepo struct{}
 
+func (m *MockMongoRepo) FindAllTransactionsForAccountID(ctx context.Context, accountID string) ([]model.Transaction, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockMongoRepo) UpdateTransactionByID(ctx context.Context, transactionID string, transaction model.Transaction) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *MockMongoRepo) CreateAccount(ctx context.Context, documentID string) (*model.Account, error) {
 	switch documentID {
 	case "":

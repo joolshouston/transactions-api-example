@@ -46,6 +46,16 @@ func (m *MockMongoRepo) FindTransactionByIdempotencyKey(ctx context.Context, ide
 	}
 }
 
+func (m *MockMongoRepo) FindAllTransactionsForAccountID(ctx context.Context, accountID string) ([]model.Transaction, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockMongoRepo) UpdateTransactionByID(ctx context.Context, transactionID string, transaction model.Transaction) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func Test_CreateTransaction(t *testing.T) {
 	repo := &MockMongoRepo{}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
