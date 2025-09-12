@@ -39,6 +39,7 @@ func (s *TransactionService) CreateTransaction(ctx context.Context, transaction 
 			Message: fmt.Sprintf("failed to check existing transaction by idempotency key"),
 		}
 	}
+
 	if existingTx != nil {
 		s.logger.InfoContext(ctx, "transaction with the same idempotency key already exists", "idempotencyKey", idempotencyKey)
 		return &model.TransactionResponseBody{
@@ -93,10 +94,62 @@ func (s *TransactionService) CreateTransaction(ctx context.Context, transaction 
 			Message: "account not found",
 		}
 	}
+	balance := transaction.Amount
+	// If its a payment type 4 then look through previous transaction and adjust the already existing balances
+	if transaction.OperationID == model.OperationTypePayment {
+		allTransactions, err := s.repo.FindAllTransactionsForAccountID(ctx, transaction.AccountID)
+		if err != nil {
+			return nil, &model.ErrorResponse{
+				Status:  http.StatusInternalServerError,
+				Message: fmt.Sprintf("failed to get all transactions for account"),
+			}
+		}
+		var remainder float64 = 0
+		for _, tx := range allTransactions {
+			if tx.Balance < 0 {
+				remainder = tx.Balance + balance
+				if remainder <= 0 {
+					err := s.repo.UpdateTransactionByID(ctx, tx.ID.Hex(), model.Transaction{
+						AccountID:   tx.AccountID,
+						Balance:     remainder,
+						OperationID: tx.OperationID,
+						Amount:      tx.Amount,
+					})
+					s.logger.InfoContext(ctx, "updated transaction", "transactionID", tx.ID.Hex(), "balance", remainder)
+					if err != nil {
+						s.logger.ErrorContext(ctx, "failed to update transaction", "error", err)
+						return nil, &model.ErrorResponse{
+							Status:  http.StatusInternalServerError,
+							Message: fmt.Sprintf("failed to update transaction"),
+						}
+					}
+					balance = 0
+					break
+				}
+				err := s.repo.UpdateTransactionByID(ctx, tx.ID.Hex(), model.Transaction{
+					AccountID:   tx.AccountID,
+					Balance:     0,
+					OperationID: tx.OperationID,
+					Amount:      tx.Amount,
+				})
+				s.logger.InfoContext(ctx, "updated transaction", "transactionID", tx.ID.Hex(), "balance", 0)
+				if err != nil {
+					s.logger.ErrorContext(ctx, "failed to update transaction", "error", err)
+					return nil, &model.ErrorResponse{
+						Status:  http.StatusInternalServerError,
+						Message: fmt.Sprintf("failed to update transaction"),
+					}
+				}
+				balance = remainder
+			}
+		}
+	}
+
 	tx := model.Transaction{
 		AccountID:   transaction.AccountID,
 		OperationID: transaction.OperationID,
 		Amount:      transaction.Amount,
+		Balance:     balance,
 		EventDate:   time.Now().Format(time.RFC3339Nano),
 	}
 

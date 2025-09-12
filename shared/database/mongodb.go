@@ -78,3 +78,30 @@ func (m *MongoDB) FindTransactionByIdempotencyKey(ctx context.Context, idempoten
 	}
 	return &tx, nil
 }
+
+func (m *MongoDB) FindAllTransactionsForAccountID(ctx context.Context, accountID string) ([]model.Transaction, error) {
+	var transactions []model.Transaction
+	result, err := m.client.Database("pismo").Collection("transactions").Find(ctx, bson.M{"account_id": accountID})
+	if err != nil {
+		return nil, err
+	}
+	if err = result.All(ctx, &transactions); err != nil {
+		return nil, err
+	}
+	return transactions, nil
+}
+
+func (m *MongoDB) UpdateTransactionByID(ctx context.Context, transactionID string, transaction model.Transaction) error {
+	id, err := bson.ObjectIDFromHex(transactionID)
+	if err != nil {
+		return err
+	}
+	result, err := m.client.Database("pismo").Collection("transactions").UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": transaction})
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("transaction not found")
+	}
+	return nil
+}

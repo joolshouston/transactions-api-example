@@ -81,6 +81,16 @@ func (m *MockRouteRepo) FindTransactionByIdempotencyKey(ctx context.Context, ide
 	return nil, nil
 }
 
+func (m *MockRouteRepo) FindAllTransactionsForAccountID(ctx context.Context, accountID string) ([]model.Transaction, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockRouteRepo) UpdateTransactionByID(ctx context.Context, transactionID string, transaction model.Transaction) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func TestRoutes(t *testing.T) {
 	repo := &MockRouteRepo{}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
